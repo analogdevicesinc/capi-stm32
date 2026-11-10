@@ -1,0 +1,34 @@
+# Build artifacts
+build/
+build-*/
+build_*/
+reports/
+build-test/
+build-coverage/
+
+# Dependency pins resolved at configure time. Machine-specific -- every entry
+# is "via: local" on a developer box -- so the file says itself it belongs in
+# a .gitignore unless you deliberately want the pins tracked.
+capi.lock.yml
+
+# Object files
+*.o
+*.d
+*.a
+*.elf
+*.hex
+*.bin
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Generated
+*generated*
+
+# OS
+.DS_Store

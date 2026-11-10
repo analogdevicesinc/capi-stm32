@@ -1,0 +1,146 @@
+# Copyright (c) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: BSD-3-Clause
+
+# Generic CAPI interfaces that the application enables in project.conf
+menu "CAPI Platform Interfaces"
+
+config PLATFORM_DRIVERS
+	bool "Enable Platform Drivers"
+	default n
+
+config SPI
+	bool "Enable SPI"
+	default n
+
+config I2C
+	bool "Enable I2C"
+	default n
+
+config UART
+	bool "Enable UART"
+	default n
+
+config GPIO
+	bool "Enable GPIO"
+	default n
+
+config IRQ
+	bool "Enable IRQ"
+	default n
+
+config PWM
+	bool "Enable PWM"
+	default n
+
+config TIMER
+	bool "Enable Timer"
+	default n
+
+config DMA
+	bool "Enable DMA"
+	default n
+
+config I3C
+	bool "Enable I3C"
+	default n
+
+config TDM
+	bool "Enable TDM"
+	default n
+
+endmenu
+
+# STM32 backends. Each backend needs its generic interface above.
+menuconfig STM32
+	bool "STM32 Platform Drivers"
+	default n
+	help
+	  Enable support for STM32 platform drivers.
+
+if STM32
+
+config GPIO_STM32
+	bool "Enable STM32 GPIO driver"
+	depends on GPIO
+	default n
+
+config GPIO_IRQ_STM32
+	bool "Enable STM32 GPIO IRQ driver"
+	depends on GPIO && IRQ
+	default n
+
+config I2C_STM32
+	bool "Enable STM32 I2C driver"
+	depends on I2C
+	default n
+
+config I3C_STM32
+	bool "Enable STM32 I3C driver"
+	depends on I3C
+	default n
+
+config SPI_STM32
+	bool "Enable STM32 SPI driver"
+	depends on SPI
+	select DMA
+	default n
+
+# The XSPI backend implements the CAPI SPI interface
+config XSPI_STM32
+	bool "Enable STM32 XSPI driver"
+	depends on SPI
+	default n
+
+config UART_STM32
+	bool "Enable STM32 UART driver"
+	depends on UART
+	default n
+
+config UART_STDIO_STM32
+	bool "Enable STM32 UART STDIO driver"
+	depends on UART
+	default n
+
+# This backend is a stub
+config USB_UART_STM32
+	bool "Enable STM32 USB UART driver"
+	default n
+
+# CMakeLists.txt always compiles the IRQ backend and does not read this symbol
+config IRQ_STM32
+	bool "Enable STM32 IRQ driver"
+	depends on IRQ
+	default n
+
+config PWM_STM32
+	bool "Enable STM32 PWM driver"
+	depends on PWM
+	default n
+
+config TIMER_STM32
+	bool "Enable STM32 Timer driver"
+	depends on TIMER
+	default n
+
+config DMA_STM32
+	bool "Enable STM32 DMA driver"
+	depends on DMA
+	default n
+
+config GPDMA_STM32
+	bool "Enable STM32 GPDMA driver"
+	depends on DMA
+	default n
+
+config TDM_STM32
+	bool "Enable STM32 TDM driver"
+	depends on TDM
+	default n
+
+# CubeMX project file (.ioc or .ioc2). The extension selects the generator.
+# A relative path starts at CMAKE_SOURCE_DIR. If empty, board.cmake sets it.
+config STM32_IOC_PATH
+	string "STM32 CubeMX IOC file path"
+	default ""
+
+endif # STM32
