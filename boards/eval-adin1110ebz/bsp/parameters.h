@@ -34,11 +34,11 @@
 /* SPI2 to the ADIN1110: SCLK=PB13, MISO=PB14, MOSI=PB15 */
 #define BSP_SPI_INSTANCE       2
 /*
- * SCLK of SPI2. The backend keeps the rate of the .ioc: PCLK1 96 MHz with
- * prescaler 8. Change both together.
+ * SCLK of SPI2. The backend keeps the rate of the .ioc: PCLK1 100 MHz with
+ * prescaler 4. Change both together.
  */
 #ifndef ADIN1110_SPI_HZ
-#define ADIN1110_SPI_HZ        12000000U
+#define ADIN1110_SPI_HZ        25000000U
 #endif
 
 /* ADIN1110 control pins */
