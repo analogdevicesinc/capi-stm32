@@ -4,7 +4,7 @@
 name: capi-stm32
 type: platform
 version: "0.9.0"
-description: "CAPI STM32 platform backend (NUCLEO-H753ZI, NUCLEO-C5A3ZG)"
+description: "CAPI STM32 platform backend (NUCLEO-H753ZI, NUCLEO-C5A3ZG, EVAL-ADIN1110EBZ)"
 
 capi_version_requirement: ">=0.9.0"
 

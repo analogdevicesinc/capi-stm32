@@ -43,6 +43,7 @@ cmake --build build-stm32/<board> --target flash
 |---|---|---|
 | `nucleo-h753zi` | STM32H753ZI | STM32CubeMX |
 | `nucleo-c5a3zg` | STM32C5A3ZG | STM32CubeMX2 |
+| `eval-adin1110ebz` | STM32L4S5QII | STM32CubeMX |
 
 ## Notes
 
@@ -52,6 +53,13 @@ cmake --build build-stm32/<board> --target flash
   STM32CubeMX2 processes and run again.
 - With more than one ST-LINK, set `-DSTM32_OPENOCD_ADAPTER_SERIAL=<serial>`.
 - NUCLEO-C5A3ZG has no DMA and no GPIO IRQ backend yet.
+- EVAL-ADIN1110EBZ needs the STM32Cube FW_L4 V1.18.2 package in STM32CubeMX.
+  Its console is USART1 on the board's FT232R USB UART. It has no on-board
+  ST-LINK: connect one to the SWD header and configure with
+  `-DSTM32_OPENOCD_INTERFACE=interface/stlink.cfg`. The ADIN1110 is on SPI2
+  at 12 MHz (the .ioc prescaler), with CS_N on PB12, RESET_N on PC7 and INT_N
+  on PB11. The CAPI ADIN1110 driver needs the OPEN Alliance SPI straps
+  (SPI_CFG1 = 0). PC8/PC9 read SPI_CFG0/SPI_CFG1.
 
 ## License
 

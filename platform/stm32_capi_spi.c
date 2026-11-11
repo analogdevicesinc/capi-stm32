@@ -35,7 +35,29 @@ struct stm32_spi_priv {
 	stm32_hal_spi_t *hspi;
 	enum capi_spi_mode format_mode;
 	bool format_valid;
+	/* A capi_spi_set_cs() call holds the GPIO chip select */
+	bool cs_manual;
 };
+
+/*
+ * Drive the GPIO chip selects of the device, all at one level.
+ * CS_N is active low. A device with cs_gpio_num 0 has one pin.
+ */
+static int stm32_spi_drive_cs(const struct capi_spi_device *device,
+			      uint8_t value)
+{
+	uint8_t num = device->cs_gpio_num ? device->cs_gpio_num : 1;
+	int ret = 0;
+
+	for (uint8_t i = 0; i < num; i++) {
+		int err = capi_gpio_pin_set_raw_value(&device->cs_gpio[i], value);
+
+		if (err && !ret)
+			ret = err;
+	}
+
+	return ret;
+}
 
 /*
  * Load the clock format of the device if the peripheral does not have it.
@@ -63,6 +85,10 @@ static int stm32_spi_select_format(struct stm32_spi_priv *priv,
 
 	return 0;
 }
+
+static int stm32_spi_transfer(struct stm32_spi_priv *priv,
+			      struct capi_spi_transfer *transfer,
+			      uint32_t timeout);
 
 static int stm32_capi_spi_init(struct capi_spi_controller_handle **handle,
 			       const struct capi_spi_config *config)
@@ -151,7 +177,6 @@ static int stm32_capi_spi_transceive(struct capi_spi_device *device,
 {
 	struct stm32_spi_priv *priv;
 	uint32_t timeout;
-	uint16_t size;
 	int ret;
 
 	if (!device || !device->controller || !device->controller->priv || !transfer)
@@ -164,6 +189,31 @@ static int stm32_capi_spi_transceive(struct capi_spi_device *device,
 	ret = stm32_spi_select_format(priv, device);
 	if (ret)
 		return ret;
+
+	/*
+	 * The peripheral has no hardware chip select here, so frame the
+	 * transfer with the GPIO chip select. CAPI_SPI_CS_AUTO means one
+	 * assertion for each transfer. After a manual assert, the caller
+	 * holds CS across transfers and releases it.
+	 */
+	if (!device->cs_gpio || priv->cs_manual)
+		return stm32_spi_transfer(priv, transfer, timeout);
+
+	ret = stm32_spi_drive_cs(device, CAPI_GPIO_LOW);
+	if (!ret)
+		ret = stm32_spi_transfer(priv, transfer, timeout);
+
+	int cs_ret = stm32_spi_drive_cs(device, CAPI_GPIO_HIGH);
+
+	return ret ? ret : cs_ret;
+}
+
+/* One blocking transfer, without the chip select */
+static int stm32_spi_transfer(struct stm32_spi_priv *priv,
+			      struct capi_spi_transfer *transfer,
+			      uint32_t timeout)
+{
+	uint16_t size;
 
 	if (transfer->tx_buf && transfer->rx_buf) {
 		size = (transfer->tx_size > transfer->rx_size) ?
@@ -189,26 +239,31 @@ static int stm32_capi_spi_transceive(struct capi_spi_device *device,
 static int stm32_capi_spi_set_cs(struct capi_spi_device *device,
 				 enum capi_spi_cs_control cs)
 {
-	if (!device)
+	struct stm32_spi_priv *priv;
+
+	if (!device || !device->controller || !device->controller->priv)
 		return -EINVAL;
 
 	/* Only a GPIO chip select is possible */
 	if (!device->cs_gpio)
 		return 0;
 
+	priv = device->controller->priv;
+
 	switch (cs) {
 	case CAPI_SPI_CS_MANUAL_ASSERT:
-		capi_gpio_pin_set_raw_value(device->cs_gpio, CAPI_GPIO_LOW);
-		break;
+		priv->cs_manual = true;
+		return stm32_spi_drive_cs(device, CAPI_GPIO_LOW);
 	case CAPI_SPI_CS_MANUAL_DEASSERT:
-		capi_gpio_pin_set_raw_value(device->cs_gpio, CAPI_GPIO_HIGH);
-		break;
+		priv->cs_manual = false;
+		return stm32_spi_drive_cs(device, CAPI_GPIO_HIGH);
 	case CAPI_SPI_CS_AUTO:
+		/* Transfers frame the chip select again, idle high in between */
+		priv->cs_manual = false;
+		return stm32_spi_drive_cs(device, CAPI_GPIO_HIGH);
 	default:
-		break;
+		return -EINVAL;
 	}
-
-	return 0;
 }
 
 const struct capi_spi_ops stm32_capi_spi_ops = {
