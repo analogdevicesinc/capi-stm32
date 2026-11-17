@@ -55,11 +55,14 @@ cmake --build build-stm32/<board> --target flash
 - NUCLEO-C5A3ZG has no DMA and no GPIO IRQ backend yet.
 - EVAL-ADIN1110EBZ needs the STM32Cube FW_L4 V1.18.2 package in STM32CubeMX.
   Its console is USART1 on the board's FT232R USB UART. It has no on-board
-  ST-LINK: connect one to the SWD header and configure with
-  `-DSTM32_OPENOCD_INTERFACE=interface/stlink.cfg`. The ADIN1110 is on SPI2
-  at 12 MHz (the .ioc prescaler), with CS_N on PB12, RESET_N on PC7 and INT_N
-  on PB11. The CAPI ADIN1110 driver needs the OPEN Alliance SPI straps
-  (SPI_CFG1 = 0). PC8/PC9 read SPI_CFG0/SPI_CFG1.
+  ST-LINK: connect one to the SWD header. The default OpenOCD interface,
+  `interface/stlink-dap.cfg`, works with STM32CubeIDE's OpenOCD;
+  `interface/stlink.cfg` does not. The ADIN1110 is on SPI2 at 25 MHz (PCLK1
+  100 MHz and the .ioc's prescaler 4), with CS_N on PB12, RESET_N on PC7 and
+  INT_N on PB11. PC8/PC9 read the SPI_CFG0/SPI_CFG1 straps, which select
+  OPEN Alliance (SPI_CFG1 = 0) or generic SPI (SPI_CFG1 = 1); the ADIN1110
+  driver in [no-OS-adin](https://github.com/analogdevicesinc/no-OS-adin)
+  supports both.
 
 ## License
 
